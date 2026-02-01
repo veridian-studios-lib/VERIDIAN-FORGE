@@ -102,9 +102,9 @@
 </head>
 <body>
 
-    <div id="quote-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505]">
-        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
-        <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING SYSTEM...</span>
+    <div id="quote-screen" onclick="enterArchive()" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505] cursor-pointer">
+    <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
+    <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING SYSTEM...</span>
     </div>
 
     <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
@@ -131,8 +131,7 @@
         </div>
     </div>
 
-    <script>
-        // Renamed 'staticBooks' to 'systemModules' for immersion
+        <script>
         const systemModules = [
             { id: "core_1", title: "System_Kernel.js", author: "Root Admin", desc: "Core Logic" },
             { id: "core_2", title: "UI_Manifest.css", author: "Design Wing", desc: "Visual Style" },
@@ -140,16 +139,24 @@
         ];
 
         function enterArchive() {
-            document.getElementById('quote-screen').style.opacity = '0';
+            // Prevent double-firing if user clicks while auto-loading
+            const screen = document.getElementById('quote-screen');
+            if(screen.style.opacity === '0') return;
+
+            screen.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('quote-screen').classList.add('hidden');
+                screen.classList.add('hidden');
                 const gallery = document.getElementById('main-gallery');
                 gallery.classList.remove('hidden');
-                setTimeout(() => gallery.classList.add('opacity-100'), 50);
+                // Small delay to ensure display:block is applied before opacity transition
+                requestAnimationFrame(() => {
+                    gallery.classList.add('opacity-100');
+                });
                 searchCode(); 
             }, 1200);
         }
 
+        // ... [Keep toggleMenu, goToOrigin, searchCode exactly as they were] ...
         function toggleMenu() {
             const bloom = document.getElementById('bloom');
             const plus = document.getElementById('plus');
@@ -159,16 +166,16 @@
 
         function goToOrigin(event) {
             event.stopPropagation();
-            window.location.href = 'origin.html'; // Or your main portfolio
+            window.location.href = 'origin.html'; 
         }
 
         async function searchCode() {
+            // [Keep your existing searchCode logic here]
             const shelf = document.getElementById('shelf');
             const query = document.getElementById('archive-search').value.toLowerCase();
             shelf.innerHTML = ''; 
 
             try {
-                // Fetching from the same database, but displaying differently
                 const library = await localforage.getItem('veridian_library') || [];
                 const allFiles = [...systemModules, ...library];
                 
@@ -182,7 +189,6 @@
                     card.className = 'code-artifact';
                     card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
                     
-                    // Logic to show "JS", "PY", "TXT" badge based on title
                     let ext = "DOC";
                     if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
 
@@ -204,6 +210,13 @@
                 console.error("System Error:", err);
             }
         }
-    </script>
+
+        // --- THE IGNITION KEY ---
+        // Automatically enter after 2.5 seconds to simulate system boot
+        window.addEventListener('load', () => {
+            setTimeout(enterArchive, 2500);
+        });
+        </script>
+    
 </body>
 </html>
