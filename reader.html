@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Veridian Code Hub | Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600&family=Fauna+One&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #D4AF37; --paper: #1a1a1a; --dark: #050505; }
+        
+        body { 
+            background: var(--dark); margin: 0; height: 100vh; overflow: hidden;
+            font-family: 'Fauna One', serif; color: #e0e0e0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- THE HEADER --- */
+        .top-bar {
+            position: fixed; top: 0; width: 100%; height: 70px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 25px; z-index: 100;
+            background: linear-gradient(to bottom, #050505 80%, transparent);
+        }
+
+        .file-title {
+            color: var(--gold); font-size: 14px; letter-spacing: 1px;
+            max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            opacity: 0.8; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 5px;
+        }
+
+        .back-btn { color: var(--gold); font-size: 18px; cursor: pointer; opacity: 0.6; }
+
+        /* --- THE CODE SCROLL (The "Page") --- */
+        .scroll-stage {
+            margin-top: 80px; width: 92vw; max-width: 800px; height: calc(100vh - 100px);
+            background: var(--paper);
+            border-radius: 20px; /* Curved Corners */
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            overflow: hidden; position: relative;
+            display: flex;
+        }
+
+        .gutter {
+            width: 50px; background: #141414; flex-shrink: 0;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            text-align: right; padding: 20px 10px;
+            font-family: 'Fira Code', monospace; font-size: 11px; color: #555;
+            user-select: none; overflow: hidden;
+        }
+
+        .code-view {
+            flex-grow: 1; padding: 20px 15px;
+            font-family: 'Fira Code', monospace; font-size: 11px; line-height: 1.6;
+            color: #d4d4d4; white-space: pre; overflow: auto;
+            scrollbar-width: thin; scrollbar-color: var(--gold) #1a1a1a;
+        }
+
+        /* --- THE THREE DOTS MENU --- */
+        .menu-btn {
+            font-size: 24px; color: var(--gold); cursor: pointer; opacity: 0.7;
+            transition: 0.3s;
+        }
+        .menu-btn:hover { opacity: 1; text-shadow: 0 0 10px var(--gold); }
+
+        .action-menu {
+            position: absolute; top: 60px; right: 25px;
+            background: #111; border: 1px solid var(--gold);
+            border-radius: 10px; padding: 10px 0;
+            width: 140px; transform-origin: top right; transform: scale(0);
+            transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9); z-index: 200;
+        }
+        .action-menu.open { transform: scale(1); }
+
+        .menu-item {
+            padding: 12px 20px; font-size: 11px; letter-spacing: 1px;
+            color: #ccc; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .menu-item:hover { background: rgba(212, 175, 55, 0.15); color: var(--gold); }
+
+        /* --- UTILS --- */
+        #unlock-screen {
+            position: fixed; inset: 0; z-index: 500; background: #050505;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="unlock-screen" onclick="revealCode()">
+        <p class="text-[#D4AF37] italic opacity-40 mb-4 text-xs tracking-[0.2em]" id="load-status">DECRYPTING...</p>
+        <button class="px-6 py-2 border border-[#D4AF37]/30 text-[#D4AF37] uppercase text-[10px] hover:bg-[#D4AF37] hover:text-black transition-all">
+            ACCESS TERMINAL
+        </button>
+    </div>
+
+    <div class="top-bar">
+        <div class="back-btn" onclick="window.location.href='index.html'">←</div>
+        <div class="file-title" id="file-title">Loading...</div>
+        <div class="menu-btn" onclick="toggleMenu()">⋮</div>
+    </div>
+
+    <div class="action-menu" id="action-menu">
+        <div class="menu-item" onclick="handleEdit()">✎ &nbsp; EDIT</div>
+        <div class="menu-item" onclick="handleCopy()">❐ &nbsp; COPY</div>
+        <div class="menu-item" onclick="handleDownload()">⬇ &nbsp; DOWNLOAD</div>
+    </div>
+
+    <div class="scroll-stage">
+        <div class="gutter" id="gutter"></div>
+        <div class="code-view" id="code-content" onscroll="syncScroll()"></div>
+    </div>
+
+    <script>
+        let currentCode = "";
+        let currentTitle = "Untitled";
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const fileId = params.get('id');
+
+            // 1. Fetch from LocalForage
+            try {
+                const library = await localforage.getItem('veridian_library') || [];
+                // If your data structure changed for Code Hub, adjust 'veridian_library' to your new key
+                const file = library.find(f => f.id === fileId);
+
+                if (file) {
+                    currentTitle = file.title;
+                    // Handle "Reader-Enhanceme..." Logic
+                    const displayTitle = currentTitle.length > 18 
+                        ? currentTitle.substring(0, 15) + "..." 
+                        : currentTitle;
+                    
+                    document.getElementById('file-title').innerText = displayTitle;
+
+                    // If your code is stored as array of lines, join them. If string, use as is.
+                    // Assuming Archive format might be array of pages/sentences, we flatten it.
+                    if (Array.isArray(file.content)) {
+                        currentCode = file.content.flat().join('\n');
+                    } else {
+                        currentCode = file.content || "// No code content found.";
+                    }
+                    
+                    renderCode(currentCode);
+                } else {
+                    document.getElementById('file-title').innerText = "Corrupted Data";
+                    renderCode("// ERROR: File ID not found in Local Forge.");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderCode(code) {
+            const codeEl = document.getElementById('code-content');
+            const gutterEl = document.getElementById('gutter');
+
+            // Escape HTML to prevent execution
+            const safeCode = code.replace(/&/g, "&amp;")
+                                 .replace(/</g, "&lt;")
+                                 .replace(/>/g, "&gt;");
+
+            codeEl.innerHTML = safeCode;
+
+            // Generate Line Numbers
+            const lines = code.split('\n').length;
+            gutterEl.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('<br>');
+        }
+
+        // Sync Scroll: When user scrolls code, line numbers follow
+        function syncScroll() {
+            const codeEl = document.getElementById('code-content');
+            const gutterEl = document.getElementById('gutter');
+            gutterEl.scrollTop = codeEl.scrollTop;
+        }
+
+        function revealCode() {
+            document.getElementById('unlock-screen').style.opacity = '0';
+            setTimeout(() => { document.getElementById('unlock-screen').remove(); }, 600);
+        }
+
+        // --- MENU ACTIONS ---
+
+        function toggleMenu() {
+            document.getElementById('action-menu').classList.toggle('open');
+        }
+
+        // Close menu if clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('action-menu');
+            const btn = document.querySelector('.menu-btn');
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+
+        function handleCopy() {
+            navigator.clipboard.writeText(currentCode).then(() => {
+                alert("Ritual Complete: Code Copied.");
+                toggleMenu();
+            });
+        }
+
+        function handleDownload() {
+            const blob = new Blob([currentCode], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentTitle.endsWith('.js') || currentTitle.endsWith('.html') || currentTitle.endsWith('.css') 
+                         ? currentTitle 
+                         : `${currentTitle}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toggleMenu();
+        }
+
+        function handleEdit() {
+            const params = new URLSearchParams(window.location.search);
+            const fileId = params.get('id');
+            // Redirect to your upload/edit page (assuming upload.html handles edits)
+            window.location.href = `upload.html?id=${fileId}&mode=edit`;
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
+  
