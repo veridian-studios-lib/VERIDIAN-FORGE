@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veridian Code Hub | The Forge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --carbon: #0F0A05; /* Deepest Black/Brown */
+            --gold: #D4AF37; 
+            --slate: #1E1E1E; /* Dark Grey for Cards */
+            --terminal: #111; 
+        }
+        body { 
+            font-family: 'Fauna One', serif; 
+            background-color: var(--carbon); 
+            color: var(--gold); 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
+        .tech-mono { font-family: 'Fira Code', monospace; }
+
+        /* background: darker, more industrial gradient */
+        .forge-theme { 
+            background: radial-gradient(circle at center, #1a150e 0%, #000000 100%);
+            min-height: 100vh;
+        }
+
+        .shelf-horizontal {
+            display: flex;
+            gap: 40px; /* Tighter gap for files */
+            overflow-x: auto;
+            padding: 40px 60px 100px 60px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            align-items: center;
+        }
+        .shelf-horizontal::-webkit-scrollbar { display: none; }
+
+        /* The Data Slate (Replacing the Book) */
+        .code-artifact {
+            scroll-snap-align: center;
+            min-width: 260px;
+            height: 160px; /* Shorter, wider cards for code files */
+            background: var(--slate);
+            border-top: 4px solid var(--gold); /* Top "Tab" style */
+            border-radius: 6px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            position: relative;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        .code-artifact:hover {
+            transform: translateY(-10px) scale(1.02);
+            background: #252525;
+            box-shadow: 0 30px 60px rgba(212, 175, 55, 0.1);
+            border-top: 4px solid #fff; /* Flash white on hover */
+        }
+
+        /* The Hub Menu (Bottom Left) */
+        .hub-container {
+            position: fixed; bottom: 40px; left: 40px; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+        .hub-btn { 
+            width: 70px; height: 70px; background: var(--gold); color: #0F0A05; 
+            border-radius: 12px; /* Slight square look for tech */
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.8); cursor: pointer;
+            transition: transform 0.4s;
+        }
+        
+        .menu-bloom { 
+            display: flex; flex-direction: column; gap: 12px; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.8); 
+        }
+        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        
+        .sub-btn { 
+            width: 60px; height: 60px; border-radius: 8px; /* Square-ish */
+            background: #222; border: 1px solid var(--gold);
+            color: var(--gold); display: flex; align-items: center; justify-content: center; 
+            font-size: 0.6rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .sub-btn:hover { background: var(--gold); color: black; }
+
+        /* The Quote Screen Animation */
+        #quote-screen { transition: opacity 1.2s ease-out; }
+    </style>
+</head>
+<body>
+
+    <div id="quote-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505]">
+        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
+        <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING SYSTEM...</span>
+    </div>
+
+    <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
+        
+        <header class="text-center pt-20 pb-4">
+            <h1 class="lux-serif text-3xl md:text-5xl text-[#E0E0E0] mb-6 tracking-widest">VERIDIAN<span class="text-[#D4AF37]">HUB</span></h1>
+            <input type="text" id="archive-search" oninput="searchCode()" placeholder="Query The Codebase..." 
+                   class="bg-transparent border-b border-[#D4AF37]/30 py-2 w-80 text-center focus:outline-none text-[#D4AF37] tech-mono text-sm placeholder-[#D4AF37]/30">
+        </header>
+
+        <div id="shelf" class="shelf-horizontal flex-1">
+            </div>
+
+        <div class="hub-container">
+            <div id="bloom" class="menu-bloom">
+                <button class="sub-btn" onclick="window.location.href='upload.html'">UPLOAD</button>
+                <button class="sub-btn" onclick="window.location.href='dashboard.html'">CMD</button>
+                <button class="sub-btn" onclick="window.location.href='socials.html'">LINK</button>
+                <button class="sub-btn" onclick="goToOrigin(event)">ROOT</button>
+            </div>
+            <div class="hub-btn" onclick="toggleMenu()">
+                <span id="plus" class="tech-mono font-bold">+</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Renamed 'staticBooks' to 'systemModules' for immersion
+        const systemModules = [
+            { id: "core_1", title: "System_Kernel.js", author: "Root Admin", desc: "Core Logic" },
+            { id: "core_2", title: "UI_Manifest.css", author: "Design Wing", desc: "Visual Style" },
+            { id: "core_3", title: "Protocol_Om.py", author: "The Architect", desc: "Network Rules" }
+        ];
+
+        function enterArchive() {
+            document.getElementById('quote-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('quote-screen').classList.add('hidden');
+                const gallery = document.getElementById('main-gallery');
+                gallery.classList.remove('hidden');
+                setTimeout(() => gallery.classList.add('opacity-100'), 50);
+                searchCode(); 
+            }, 1200);
+        }
+
+        function toggleMenu() {
+            const bloom = document.getElementById('bloom');
+            const plus = document.getElementById('plus');
+            bloom.classList.toggle('active');
+            plus.innerHTML = bloom.classList.contains('active') ? "×" : "+";
+        }
+
+        function goToOrigin(event) {
+            event.stopPropagation();
+            window.location.href = 'origin.html'; // Or your main portfolio
+        }
+
+        async function searchCode() {
+            const shelf = document.getElementById('shelf');
+            const query = document.getElementById('archive-search').value.toLowerCase();
+            shelf.innerHTML = ''; 
+
+            try {
+                // Fetching from the same database, but displaying differently
+                const library = await localforage.getItem('veridian_library') || [];
+                const allFiles = [...systemModules, ...library];
+                
+                const filtered = allFiles.filter(file => 
+                    file.title.toLowerCase().includes(query) || 
+                    (file.author && file.author.toLowerCase().includes(query))
+                );
+
+                filtered.forEach(file => {
+                    const card = document.createElement('div');
+                    card.className = 'code-artifact';
+                    card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
+                    
+                    // Logic to show "JS", "PY", "TXT" badge based on title
+                    let ext = "DOC";
+                    if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start w-full">
+                            <span class="tech-mono text-[10px] text-[#555] border border-[#333] px-2 py-1 rounded">${ext}</span>
+                            <span class="text-[#D4AF37] text-[10px]">● SAFE</span>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="tech-mono text-[#E0E0E0] text-sm font-bold truncate">${file.title}</h3>
+                            <p class="text-[#666] text-[10px] mt-1 font-serif italic">Auth: ${file.author || 'Unknown'}</p>
+                        </div>
+                        <div class="w-full h-[1px] bg-[#333] mt-auto mb-2"></div>
+                        <div class="text-[9px] text-[#444] tech-mono uppercase text-right">ID: ${file.id.toString().substring(0,6)}</div>
+                    `;
+                    shelf.appendChild(card);
+                });
+            } catch (err) {
+                console.error("System Error:", err);
+            }
+        }
+    </script>
+</body>
+</html>
