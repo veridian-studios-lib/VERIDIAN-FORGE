@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Forge | Ingestion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --carbon: #0F0A05; --gold: #D4AF37; --slate: #1E1E1E; }
+        
+        body { 
+            font-family: 'Fira Code', monospace; 
+            background-color: var(--carbon); 
+            color: #e0e0e0;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+        }
+
+        /* --- THE GRID BACKGROUND --- */
+        .tech-grid {
+            position: fixed; inset: 0; pointer-events: none;
+            background-image: linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .terminal-form {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 40px; width: 100%; max-width: 650px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border-radius: 6px; margin-top: 50px; position: relative;
+            z-index: 10;
+        }
+
+        /* Input Styling */
+        input, select, textarea {
+            background: #0a0a0a; border: 1px solid #333;
+            width: 100%; color: var(--gold); padding: 12px; margin-bottom: 20px;
+            outline: none; transition: 0.3s; font-family: 'Fira Code', monospace; font-size: 12px;
+            border-radius: 4px;
+        }
+        input:focus, textarea:focus, select:focus { 
+            border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); 
+        }
+
+        /* The Header */
+        h1 { 
+            font-family: 'Cinzel', serif; letter-spacing: 0.2em; color: var(--gold); 
+            text-align: center; margin-bottom: 30px; cursor: pointer; user-select: none;
+        }
+
+        /* Buttons */
+        .action-btn {
+            width: 100%; padding: 15px; background: var(--gold); color: #000;
+            border: none; font-weight: bold; cursor: pointer;
+            font-family: 'Fira Code', monospace; letter-spacing: 1px;
+            transition: 0.3s; margin-top: 10px;
+        }
+        .action-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+
+        .tab-btn {
+            flex: 1; padding: 10px; border: 1px solid #333; color: #555;
+            background: transparent; cursor: pointer; font-size: 10px; transition: 0.3s;
+        }
+        .tab-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+
+        /* PDF Zone */
+        .drop-zone {
+            border: 2px dashed rgba(212, 175, 55, 0.3); padding: 30px;
+            text-align: center; color: #666; font-size: 10px; cursor: pointer;
+            transition: 0.3s; margin-bottom: 20px;
+        }
+        .drop-zone:hover { border-color: var(--gold); color: var(--gold); }
+
+    </style>
+</head>
+<body>
+    <div class="tech-grid"></div>
+
+    <button onclick="window.location.href='index.html'" 
+            class="fixed top-6 left-6 text-[#D4AF37] opacity-50 hover:opacity-100 uppercase text-[10px] tracking-widest z-[100] transition-all">
+            ← ABORT SEQUENCE
+    </button>
+
+    <div class="terminal-form">
+        <h1 id="terminal-title">DATA INGESTION</h1>
+
+        <div class="flex gap-4 mb-6">
+            <input type="text" id="fileTitle" placeholder="FILENAME (e.g., protocol_v1.js)" class="flex-[2]">
+            <select id="fileExt" class="flex-1">
+                <option value="TXT">TXT</option>
+                <option value="JS">JS</option>
+                <option value="PY">PY</option>
+                <option value="HTML">HTML</option>
+                <option value="CSS">CSS</option>
+                <option value="DOC">DOC</option>
+            </select>
+        </div>
+
+        <div class="flex mb-6">
+            <button class="tab-btn active" id="btn-manual" onclick="setMode('manual')">MANUAL INPUT</button>
+            <button class="tab-btn" id="btn-pdf" onclick="setMode('pdf')">PDF PARSE</button>
+        </div>
+
+        <div id="pdf-section" class="hidden">
+            <div class="drop-zone" onclick="document.getElementById('pdf-input').click()">
+                <p>CLICK TO UPLOAD PDF DOCUMENT</p>
+                <input type="file" id="pdf-input" hidden accept=".pdf" onchange="handlePdfUpload(event)">
+            </div>
+            <p id="pdf-status" class="text-center text-[10px] text-[#D4AF37] mb-4 h-4"></p>
+        </div>
+
+        <textarea id="fileContent" rows="12" placeholder="// PASTE OR TYPE CODE HERE..."></textarea>
+        
+        <button class="action-btn" onclick="commitToForge()">INITIATE UPLOAD</button>
+    </div>
+
+    <script src="upload-enhancements.js"></script>
+
+    <script>
+        // PDF Worker Setup (Required for PDF.js)
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // --- UI TOGGLE LOGIC ---
+        function setMode(mode) {
+            document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
+            document.getElementById('btn-pdf').classList.toggle('active', mode === 'pdf');
+            
+            if (mode === 'pdf') {
+                document.getElementById('pdf-section').classList.remove('hidden');
+                document.getElementById('fileContent').placeholder = "// EXTRACTED TEXT WILL APPEAR HERE...";
+            } else {
+                document.getElementById('pdf-section').classList.add('hidden');
+                document.getElementById('fileContent').placeholder = "// PASTE OR TYPE CODE HERE...";
+            }
+        }
+
+        // --- SECRET ADMIN GATE ---
+        let taps = 0;
+        document.getElementById('terminal-title').addEventListener('click', () => {
+            taps++;
+            setTimeout(() => taps = 0, 800); 
+            if(taps === 3) {
+                const pass = prompt("ROOT ACCESS REQUIRED:");
+                if(pass === "sudo_forge") { // NEW PASSWORD
+                    window.location.href = 'admin.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
