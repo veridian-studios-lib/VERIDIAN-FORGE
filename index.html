@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Code Hub | The Forge</title>
+    <title>Veridian Forge | Code Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --carbon: #0F0A05; /* Deepest Black/Brown */
+            --carbon: #0F0A05; 
             --gold: #D4AF37; 
-            --slate: #1E1E1E; /* Dark Grey for Cards */
-            --terminal: #111; 
+            --slate: #1E1E1E; 
         }
         body { 
             font-family: 'Fauna One', serif; 
@@ -21,18 +20,39 @@
             margin: 0; 
             overflow: hidden; 
         }
-        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
+        .lux-serif { font-family: 'Cinzel', serif; }
         .tech-mono { font-family: 'Fira Code', monospace; }
 
-        /* background: darker, more industrial gradient */
         .forge-theme { 
             background: radial-gradient(circle at center, #1a150e 0%, #000000 100%);
             min-height: 100vh;
         }
 
+        /* --- THE NEW STACKED HEADER --- */
+        .title-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1;
+        }
+        .title-veridian {
+            font-size: 2.5rem;
+            color: #E0E0E0;
+            letter-spacing: 0.3em;
+        }
+        .title-hub {
+            font-size: 1.8rem;
+            color: var(--gold);
+            letter-spacing: 0.5em;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        /* --- SHELF & CARDS --- */
         .shelf-horizontal {
             display: flex;
-            gap: 40px; /* Tighter gap for files */
+            gap: 40px; 
             overflow-x: auto;
             padding: 40px 60px 100px 60px;
             scroll-snap-type: x mandatory;
@@ -41,45 +61,39 @@
         }
         .shelf-horizontal::-webkit-scrollbar { display: none; }
 
-        /* The Data Slate (Replacing the Book) */
         .code-artifact {
             scroll-snap-align: center;
             min-width: 260px;
-            height: 160px; /* Shorter, wider cards for code files */
+            height: 160px; 
             background: var(--slate);
-            border-top: 4px solid var(--gold); /* Top "Tab" style */
+            border-top: 4px solid var(--gold); 
             border-radius: 6px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             cursor: pointer;
             transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            display: flex; flex-direction: column; justify-content: space-between;
             padding: 25px;
             position: relative;
             border-bottom: 1px solid rgba(212, 175, 55, 0.1);
         }
-        
         .code-artifact:hover {
             transform: translateY(-10px) scale(1.02);
             background: #252525;
-            box-shadow: 0 30px 60px rgba(212, 175, 55, 0.1);
-            border-top: 4px solid #fff; /* Flash white on hover */
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.15); /* Golden Glow */
+            border-top: 4px solid #FFD700; 
         }
 
-        /* The Hub Menu (Bottom Left) */
+        /* --- HUB MENU --- */
         .hub-container {
             position: fixed; bottom: 40px; left: 40px; z-index: 100;
             display: flex; flex-direction: column; align-items: center; gap: 20px;
         }
         .hub-btn { 
             width: 70px; height: 70px; background: var(--gold); color: #0F0A05; 
-            border-radius: 12px; /* Slight square look for tech */
-            display: flex; align-items: center; justify-content: center; 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
             font-size: 2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.8); cursor: pointer;
             transition: transform 0.4s;
         }
-        
         .menu-bloom { 
             display: flex; flex-direction: column; gap: 12px; 
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -88,30 +102,34 @@
         .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         
         .sub-btn { 
-            width: 60px; height: 60px; border-radius: 8px; /* Square-ish */
+            width: 60px; height: 60px; border-radius: 8px; 
             background: #222; border: 1px solid var(--gold);
             color: var(--gold); display: flex; align-items: center; justify-content: center; 
-            font-size: 0.6rem; font-weight: bold; letter-spacing: 1px;
-            cursor: pointer; transition: 0.2s;
+            font-size: 0.55rem; font-weight: bold; letter-spacing: 1px;
+            cursor: pointer; transition: 0.2s; text-transform: uppercase;
         }
         .sub-btn:hover { background: var(--gold); color: black; }
 
-        /* The Quote Screen Animation */
+        /* Animation Classes */
         #quote-screen { transition: opacity 1.2s ease-out; }
     </style>
 </head>
 <body>
 
     <div id="quote-screen" onclick="enterArchive()" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505] cursor-pointer">
-    <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
-    <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING SYSTEM...</span>
+        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
+        <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING FORGE...</span>
     </div>
 
     <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
         
-        <header class="text-center pt-20 pb-4">
-            <h1 class="lux-serif text-3xl md:text-5xl text-[#E0E0E0] mb-6 tracking-widest">VERIDIAN<span class="text-[#D4AF37]">HUB</span></h1>
-            <input type="text" id="archive-search" oninput="searchCode()" placeholder="Query The Codebase..." 
+        <header class="text-center pt-16 pb-4">
+            <div class="title-stack lux-serif mb-6">
+                <span class="title-veridian">VERIDIAN</span>
+                <span class="title-hub">CODE HUB</span>
+            </div>
+
+            <input type="text" id="archive-search" oninput="searchCode()" placeholder="EXECUTE SEARCH..." 
                    class="bg-transparent border-b border-[#D4AF37]/30 py-2 w-80 text-center focus:outline-none text-[#D4AF37] tech-mono text-sm placeholder-[#D4AF37]/30">
         </header>
 
@@ -121,9 +139,9 @@
         <div class="hub-container">
             <div id="bloom" class="menu-bloom">
                 <button class="sub-btn" onclick="window.location.href='upload.html'">UPLOAD</button>
-                <button class="sub-btn" onclick="window.location.href='dashboard.html'">CMD</button>
-                <button class="sub-btn" onclick="window.location.href='socials.html'">LINK</button>
-                <button class="sub-btn" onclick="goToOrigin(event)">ROOT</button>
+                <button class="sub-btn" onclick="window.location.href='dashboard.html'">MODE</button>
+                <button class="sub-btn" onclick="window.location.href='socials.html'">SOCIALS</button>
+                <button class="sub-btn" onclick="goToOrigin(event)">ORIGIN</button>
             </div>
             <div class="hub-btn" onclick="toggleMenu()">
                 <span id="plus" class="tech-mono font-bold">+</span>
@@ -131,15 +149,14 @@
         </div>
     </div>
 
-        <script>
+    <script>
+        // System Default Files (Examples for the User)
         const systemModules = [
-            { id: "core_1", title: "System_Kernel.js", author: "Root Admin", desc: "Core Logic" },
-            { id: "core_2", title: "UI_Manifest.css", author: "Design Wing", desc: "Visual Style" },
-            { id: "core_3", title: "Protocol_Om.py", author: "The Architect", desc: "Network Rules" }
+            { id: "sys_1", title: "Kernel_Init.js", author: "System", desc: "Boot Logic" },
+            { id: "sys_2", title: "Style_Matrix.css", author: "Frontend", desc: "Visuals" }
         ];
 
         function enterArchive() {
-            // Prevent double-firing if user clicks while auto-loading
             const screen = document.getElementById('quote-screen');
             if(screen.style.opacity === '0') return;
 
@@ -148,15 +165,11 @@
                 screen.classList.add('hidden');
                 const gallery = document.getElementById('main-gallery');
                 gallery.classList.remove('hidden');
-                // Small delay to ensure display:block is applied before opacity transition
-                requestAnimationFrame(() => {
-                    gallery.classList.add('opacity-100');
-                });
+                requestAnimationFrame(() => gallery.classList.add('opacity-100'));
                 searchCode(); 
             }, 1200);
         }
 
-        // ... [Keep toggleMenu, goToOrigin, searchCode exactly as they were] ...
         function toggleMenu() {
             const bloom = document.getElementById('bloom');
             const plus = document.getElementById('plus');
@@ -170,36 +183,44 @@
         }
 
         async function searchCode() {
-            // [Keep your existing searchCode logic here]
             const shelf = document.getElementById('shelf');
             const query = document.getElementById('archive-search').value.toLowerCase();
             shelf.innerHTML = ''; 
 
             try {
-                const library = await localforage.getItem('veridian_library') || [];
-                const allFiles = [...systemModules, ...library];
+                // FIXED: Changed storage key to 'veridian_forge_data'
+                // This creates a NEW database separate from your novels
+                const forgeData = await localforage.getItem('veridian_forge_data') || [];
+                const allFiles = [...systemModules, ...forgeData];
                 
                 const filtered = allFiles.filter(file => 
                     file.title.toLowerCase().includes(query) || 
                     (file.author && file.author.toLowerCase().includes(query))
                 );
 
+                if(filtered.length === 0 && query.length > 0) {
+                     shelf.innerHTML = `<div class="w-full text-center text-[#555] tech-mono text-xs">NO MODULES FOUND</div>`;
+                     return;
+                }
+
                 filtered.forEach(file => {
                     const card = document.createElement('div');
                     card.className = 'code-artifact';
                     card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
                     
-                    let ext = "DOC";
+                    // Auto-Badge Logic
+                    let ext = "TXT";
                     if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
+                    if(ext.length > 4) ext = "FILE";
 
                     card.innerHTML = `
                         <div class="flex justify-between items-start w-full">
                             <span class="tech-mono text-[10px] text-[#555] border border-[#333] px-2 py-1 rounded">${ext}</span>
-                            <span class="text-[#D4AF37] text-[10px]">● SAFE</span>
+                            <span class="text-[#D4AF37] text-[10px] animate-pulse">● ACTIVE</span>
                         </div>
                         <div class="mt-4">
                             <h3 class="tech-mono text-[#E0E0E0] text-sm font-bold truncate">${file.title}</h3>
-                            <p class="text-[#666] text-[10px] mt-1 font-serif italic">Auth: ${file.author || 'Unknown'}</p>
+                            <p class="text-[#666] text-[10px] mt-1 font-serif italic">Dev: ${file.author || 'Me'}</p>
                         </div>
                         <div class="w-full h-[1px] bg-[#333] mt-auto mb-2"></div>
                         <div class="text-[9px] text-[#444] tech-mono uppercase text-right">ID: ${file.id.toString().substring(0,6)}</div>
@@ -207,16 +228,14 @@
                     shelf.appendChild(card);
                 });
             } catch (err) {
-                console.error("System Error:", err);
+                console.error("Forge Error:", err);
             }
         }
 
-        // --- THE IGNITION KEY ---
-        // Automatically enter after 2.5 seconds to simulate system boot
+        // Auto-Start Ignition
         window.addEventListener('load', () => {
-            setTimeout(enterArchive, 2500);
+            setTimeout(enterArchive, 2000);
         });
-        </script>
-    
+    </script>
 </body>
 </html>
