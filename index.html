@@ -3,171 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Forge | Code Hub</title>
+    <title>Veridian Code Hub | The Forge</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --carbon: #0F0A05; 
-            --gold: #D4AF37; 
-            --slate: #1E1E1E; 
+            --void-dark: #050505; 
+            --veridian-gold: #D4AF37; 
+            --terminal-green: #10B981; 
+            --forge-grey: #1A1A1A; 
+            --glass-panel: rgba(26, 26, 26, 0.95);
         }
         body { 
-            font-family: 'Fauna One', serif; 
-            background-color: var(--carbon); 
-            color: var(--gold); 
+            /* Switched to a Monospace font for that "Coder" feel */
+            font-family: 'JetBrains Mono', monospace; 
+            background-color: var(--void-dark); 
+            color: var(--veridian-gold); 
             margin: 0; 
             overflow: hidden; 
         }
-        .lux-serif { font-family: 'Cinzel', serif; }
-        .tech-mono { font-family: 'Fira Code', monospace; }
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
 
+        /* The background is now a subtle grid instead of a radial gradient */
         .forge-theme { 
-            background: radial-gradient(circle at center, #1a150e 0%, #000000 100%);
+            background-image: 
+                linear-gradient(rgba(20, 20, 20, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(20, 20, 20, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-color: var(--void-dark);
             min-height: 100vh;
         }
 
-        /* --- THE NEW STACKED HEADER --- */
-        .title-stack {
+        .rack-horizontal {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            line-height: 1.1;
-        }
-        .title-veridian {
-            font-size: 2.5rem;
-            color: #E0E0E0;
-            letter-spacing: 0.3em;
-        }
-        .title-hub {
-            font-size: 1.8rem;
-            color: var(--gold);
-            letter-spacing: 0.5em;
-            font-weight: bold;
-            opacity: 0.9;
-        }
-
-        /* --- SHELF & CARDS --- */
-        .shelf-horizontal {
-            display: flex;
-            gap: 40px; 
+            gap: 40px;
             overflow-x: auto;
-            padding: 40px 60px 100px 60px;
+            padding: 40px 100px 100px 100px;
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             align-items: center;
         }
-        .shelf-horizontal::-webkit-scrollbar { display: none; }
+        .rack-horizontal::-webkit-scrollbar { display: none; }
 
-        .code-artifact {
+        /* Transformed from "Book" to "Data Drive" */
+        .code-module {
             scroll-snap-align: center;
             min-width: 260px;
-            height: 160px; 
-            background: var(--slate);
-            border-top: 4px solid var(--gold); 
+            height: 340px;
+            background: var(--forge-grey);
+            border: 1px solid #333;
+            border-top: 4px solid var(--veridian-gold);
             border-radius: 6px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
             cursor: pointer;
-            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             padding: 25px;
             position: relative;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+            overflow: hidden;
         }
-        .code-artifact:hover {
-            transform: translateY(-10px) scale(1.02);
-            background: #252525;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.15); /* Golden Glow */
-            border-top: 4px solid #FFD700; 
+        /* Hover effect: Glows like active hardware */
+        .code-module:hover {
+            transform: translateY(-15px) scale(1.02);
+            border-top-color: var(--terminal-green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+        /* A little decorative "Tech Line" on the card */
+        .code-module::before {
+            content: ''; position: absolute; bottom: 20px; right: 20px;
+            width: 40px; height: 4px; background: #333;
         }
 
-        /* --- HUB MENU --- */
+        /* Hub Container - Kept exactly as you liked it */
         .hub-container {
             position: fixed; bottom: 40px; left: 40px; z-index: 100;
             display: flex; flex-direction: column; align-items: center; gap: 20px;
         }
         .hub-btn { 
-            width: 70px; height: 70px; background: var(--gold); color: #0F0A05; 
-            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-            font-size: 2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.8); cursor: pointer;
-            transition: transform 0.4s;
+            width: 75px; height: 75px; background: var(--veridian-gold); color: #000; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 2.5rem; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); cursor: pointer;
+            transition: transform 0.5s;
         }
         .menu-bloom { 
-            display: flex; flex-direction: column; gap: 12px; 
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            opacity: 0; pointer-events: none; transform: translateY(20px) scale(0.8); 
+            display: flex; flex-direction: column; gap: 15px; 
+            transition: 0.5s; opacity: 0; pointer-events: none; transform: translateY(20px); 
         }
-        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
         
         .sub-btn { 
-            width: 60px; height: 60px; border-radius: 8px; 
-            background: #222; border: 1px solid var(--gold);
-            color: var(--gold); display: flex; align-items: center; justify-content: center; 
-            font-size: 0.55rem; font-weight: bold; letter-spacing: 1px;
-            cursor: pointer; transition: 0.2s; text-transform: uppercase;
+            width: 70px; height: 70px; border-radius: 50%; background: #222; 
+            color: var(--veridian-gold); display: flex; align-items: center; justify-content: center; 
+            font-size: 0.65rem; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+            border: 1px solid var(--veridian-gold); cursor: pointer; transition: 0.3s;
         }
-        .sub-btn:hover { background: var(--gold); color: black; }
-
-        /* Animation Classes */
-        #quote-screen { transition: opacity 1.2s ease-out; }
+        .sub-btn:hover { background: var(--veridian-gold); color: #000; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <div id="quote-screen" onclick="enterArchive()" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505] cursor-pointer">
-        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light">"The world is built on symbols.<br>We are the architects."</p>
-        <span class="tech-mono text-[10px] text-[#D4AF37] animate-pulse tracking-[0.4em]">INITIALIZING FORGE...</span>
+    <div id="boot-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505]" onclick="bootSystem()">
+        <p class="text-xl md:text-2xl font-mono text-green-500 mb-6">Initializing Veridian Forge...</p>
+        <div class="w-48 h-1 bg-gray-800 rounded overflow-hidden">
+            <div class="h-full bg-[#D4AF37] animate-[width_2s_ease-out_forwards]" style="width: 100%"></div>
+        </div>
+        <span class="mt-4 text-[10px] text-gray-500 font-mono animate-pulse">TAP TO ACCESS CONSOLE</span>
     </div>
 
-    <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
-        
-        <header class="text-center pt-16 pb-4">
-            <div class="title-stack lux-serif mb-6">
-                <span class="title-veridian">VERIDIAN</span>
-                <span class="title-hub">CODE HUB</span>
-            </div>
-
-            <input type="text" id="archive-search" oninput="searchCode()" placeholder="EXECUTE SEARCH..." 
-                   class="bg-transparent border-b border-[#D4AF37]/30 py-2 w-80 text-center focus:outline-none text-[#D4AF37] tech-mono text-sm placeholder-[#D4AF37]/30">
+    <div id="main-interface" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
+        <header class="text-center pt-20 pb-4">
+            <h1 class="lux-serif text-3xl md:text-5xl text-[#D4AF37] mb-4">CODE HUB</h1>
+            <input type="text" id="forge-search" oninput="scanForge()" placeholder="> Query Function..." class="bg-transparent border-b border-[#333] py-2 w-80 text-center focus:outline-none text-green-500 font-mono text-lg placeholder-gray-700">
         </header>
 
-        <div id="shelf" class="shelf-horizontal flex-1">
+        <div id="rack" class="rack-horizontal flex-1">
             </div>
 
         <div class="hub-container">
             <div id="bloom" class="menu-bloom">
-                <button class="sub-btn" onclick="window.location.href='upload.html'">UPLOAD</button>
-                <button class="sub-btn" onclick="window.location.href='dashboard.html'">MODE</button>
-                <button class="sub-btn" onclick="window.location.href='socials.html'">SOCIALS</button>
+                <button class="sub-btn" onclick="window.location.href='upload_code.html'">UPLOAD</button>
+                <button class="sub-btn" onclick="window.location.href='business.html'">BIZ</button>
+                <button class="sub-btn" onclick="window.location.href='index.html'">LIBRARY</button>
                 <button class="sub-btn" onclick="goToOrigin(event)">ORIGIN</button>
             </div>
             <div class="hub-btn" onclick="toggleMenu()">
-                <span id="plus" class="tech-mono font-bold">+</span>
+                <span id="plus" style="transition: 0.5s;">+</span>
             </div>
         </div>
     </div>
 
     <script>
-        // System Default Files (Examples for the User)
-        const systemModules = [
-            { id: "sys_1", title: "Kernel_Init.js", author: "System", desc: "Boot Logic" },
-            { id: "sys_2", title: "Style_Matrix.css", author: "Frontend", desc: "Visuals" }
+        // Example "Static" Codes to show before you upload anything
+        const staticCodes = [
+            { id: "001", title: "Nav_Core_v1", lang: "CSS", func: "UI Structure" },
+            { id: "002", title: "Auth_Gate", lang: "JS", func: "Security" },
+            { id: "003", title: "Data_Fetch", lang: "Python", func: "API Link" }
         ];
 
-        function enterArchive() {
-            const screen = document.getElementById('quote-screen');
-            if(screen.style.opacity === '0') return;
-
-            screen.style.opacity = '0';
+        function bootSystem() {
+            document.getElementById('boot-screen').style.opacity = '0';
             setTimeout(() => {
-                screen.classList.add('hidden');
-                const gallery = document.getElementById('main-gallery');
-                gallery.classList.remove('hidden');
-                requestAnimationFrame(() => gallery.classList.add('opacity-100'));
-                searchCode(); 
-            }, 1200);
+                document.getElementById('boot-screen').classList.add('hidden');
+                const ui = document.getElementById('main-interface');
+                ui.classList.remove('hidden');
+                setTimeout(() => ui.classList.add('opacity-100'), 50);
+                scanForge(); 
+            }, 800);
         }
 
         function toggleMenu() {
@@ -179,63 +163,49 @@
 
         function goToOrigin(event) {
             event.stopPropagation();
-            window.location.href = 'origin.html'; 
+            window.location.href = 'origin.html';
         }
 
-        async function searchCode() {
-            const shelf = document.getElementById('shelf');
-            const query = document.getElementById('archive-search').value.toLowerCase();
-            shelf.innerHTML = ''; 
+        async function scanForge() {
+            const rack = document.getElementById('rack');
+            const query = document.getElementById('forge-search').value.toLowerCase();
+            rack.innerHTML = ''; 
 
             try {
-                // FIXED: Changed storage key to 'veridian_forge_data'
-                // This creates a NEW database separate from your novels
-                const forgeData = await localforage.getItem('veridian_forge_data') || [];
-                const allFiles = [...systemModules, ...forgeData];
+                // CHANGED: Key is now 'veridian_code_forge' so it doesn't mix with stories
+                const forgeData = await localforage.getItem('veridian_code_forge') || [];
+                const allModules = [...staticCodes, ...forgeData];
                 
-                const filtered = allFiles.filter(file => 
-                    file.title.toLowerCase().includes(query) || 
-                    (file.author && file.author.toLowerCase().includes(query))
+                const filtered = allModules.filter(item => 
+                    item.title.toLowerCase().includes(query) || 
+                    item.func.toLowerCase().includes(query)
                 );
 
-                if(filtered.length === 0 && query.length > 0) {
-                     shelf.innerHTML = `<div class="w-full text-center text-[#555] tech-mono text-xs">NO MODULES FOUND</div>`;
-                     return;
-                }
-
-                filtered.forEach(file => {
-                    const card = document.createElement('div');
-                    card.className = 'code-artifact';
-                    card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
+                filtered.forEach(item => {
+                    const moduleDiv = document.createElement('div');
+                    moduleDiv.className = 'code-module';
+                    // Passes ID to the reader
+                    moduleDiv.onclick = () => window.location.href = `reader.html?id=${item.id}`;
                     
-                    // Auto-Badge Logic
-                    let ext = "TXT";
-                    if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
-                    if(ext.length > 4) ext = "FILE";
-
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start w-full">
-                            <span class="tech-mono text-[10px] text-[#555] border border-[#333] px-2 py-1 rounded">${ext}</span>
-                            <span class="text-[#D4AF37] text-[10px] animate-pulse">● ACTIVE</span>
+                    // The "Card" Look
+                    moduleDiv.innerHTML = `
+                        <div>
+                            <span class="text-xs text-gray-500 font-mono block mb-2">// ${item.id}</span>
+                            <h3 class="text-xl text-[#D4AF37] font-bold truncate">${item.title}</h3>
+                            <span class="text-xs text-green-500 font-mono bg-[#050505] px-2 py-1 rounded border border-[#333] mt-2 inline-block">
+                                .${item.lang || 'txt'}
+                            </span>
                         </div>
-                        <div class="mt-4">
-                            <h3 class="tech-mono text-[#E0E0E0] text-sm font-bold truncate">${file.title}</h3>
-                            <p class="text-[#666] text-[10px] mt-1 font-serif italic">Dev: ${file.author || 'Me'}</p>
+                        <div class="text-sm text-gray-400 font-mono border-t border-[#333] pt-4">
+                            fn: ${item.func || 'Execute'}
                         </div>
-                        <div class="w-full h-[1px] bg-[#333] mt-auto mb-2"></div>
-                        <div class="text-[9px] text-[#444] tech-mono uppercase text-right">ID: ${file.id.toString().substring(0,6)}</div>
                     `;
-                    shelf.appendChild(card);
+                    rack.appendChild(moduleDiv);
                 });
             } catch (err) {
-                console.error("Forge Error:", err);
+                console.error("System Failure:", err);
             }
         }
-
-        // Auto-Start Ignition
-        window.addEventListener('load', () => {
-            setTimeout(enterArchive, 2000);
-        });
     </script>
 </body>
 </html>
