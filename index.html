@@ -3,207 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veridian Code Hub | The Forge</title>
+    <title>Veridian Forge | The Architect's Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@300;400&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --void-dark: #050505; 
-            --veridian-gold: #D4AF37; 
-            --terminal-green: #10B981; 
-            --forge-grey: #1A1A1A; 
-            --glass-panel: rgba(26, 26, 26, 0.95);
+            --onyx: #080808; 
+            --charcoal: #121212;
+            --gold: #D4AF37; 
+            --platinum: #E0E0E0;
+            --glass: rgba(30, 30, 30, 0.4);
         }
+
         body { 
-            /* Switched to a Monospace font for that "Coder" feel */
-            font-family: 'JetBrains Mono', monospace; 
-            background-color: var(--void-dark); 
-            color: var(--veridian-gold); 
+            font-family: 'Fauna One', serif; 
+            background-color: var(--onyx); 
+            color: var(--gold); 
             margin: 0; 
             overflow: hidden; 
         }
-        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
 
-        /* The background is now a subtle grid instead of a radial gradient */
+        /* --- THE LUXURY THEME --- */
         .forge-theme { 
-            background-image: 
-                linear-gradient(rgba(20, 20, 20, 0.8) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(20, 20, 20, 0.8) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-color: var(--void-dark);
+            background: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #000000 80%);
             min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Subtle Noise Texture for "Paper" feel */
+        .forge-theme::before {
+            content: ""; position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
         }
 
-        .rack-horizontal {
-            display: flex;
-            gap: 40px;
-            overflow-x: auto;
-            padding: 40px 100px 100px 100px;
-            scroll-snap-type: x mandatory;
-            scrollbar-width: none;
-            align-items: center;
-        }
-        .rack-horizontal::-webkit-scrollbar { display: none; }
+        /* --- TYPOGRAPHY --- */
+        .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.1em; }
+        .tech-mono { font-family: 'Fira Code', monospace; }
 
-        /* Transformed from "Book" to "Data Drive" */
-        .code-module {
+        /* The Stacked Header */
+        .header-stack {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+        .title-veridian {
+            font-size: 2.2rem; color: var(--platinum); letter-spacing: 0.4em;
+            text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        .title-hub {
+            font-size: 1.2rem; color: var(--gold); letter-spacing: 0.6em;
+            font-weight: 700; opacity: 0.9; margin-top: -5px;
+        }
+
+        /* --- THE GLASS SHELF --- */
+        .shelf-container {
+            display: flex; gap: 30px; 
+            overflow-x: auto; padding: 20px 8vw 120px 8vw;
+            scroll-snap-type: x mandatory; scrollbar-width: none;
+            align-items: center; height: 55vh;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+        .shelf-container::-webkit-scrollbar { display: none; }
+
+        /* The Obsidian Data Slate */
+        .data-slate {
             scroll-snap-align: center;
-            min-width: 260px;
-            height: 340px;
-            background: var(--forge-grey);
+            min-width: 240px; height: 320px;
+            background: linear-gradient(145deg, #161616, #0d0d0d);
             border: 1px solid #333;
-            border-top: 4px solid var(--veridian-gold);
-            border-radius: 6px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            border-radius: 4px;
+            display: flex; flex-direction: column; justify-content: space-between;
             padding: 25px;
             position: relative;
-            overflow: hidden;
-        }
-        /* Hover effect: Glows like active hardware */
-        .code-module:hover {
-            transform: translateY(-15px) scale(1.02);
-            border-top-color: var(--terminal-green);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-        }
-        /* A little decorative "Tech Line" on the card */
-        .code-module::before {
-            content: ''; position: absolute; bottom: 20px; right: 20px;
-            width: 40px; height: 4px; background: #333;
+            cursor: pointer;
+            transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Hub Container - Kept exactly as you liked it */
-        .hub-container {
-            position: fixed; bottom: 40px; left: 40px; z-index: 100;
-            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        .data-slate:hover {
+            transform: translateY(-10px);
+            border-color: var(--gold);
+            box-shadow: 0 20px 50px rgba(212, 175, 55, 0.15);
         }
-        .hub-btn { 
-            width: 75px; height: 75px; background: var(--veridian-gold); color: #000; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-size: 2.5rem; box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); cursor: pointer;
-            transition: transform 0.5s;
-        }
-        .menu-bloom { 
-            display: flex; flex-direction: column; gap: 15px; 
-            transition: 0.5s; opacity: 0; pointer-events: none; transform: translateY(20px); 
-        }
-        .menu-bloom.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        /* Gold Accents on Slate */
+        .slate-line { width: 30px; height: 2px; background: var(--gold); margin-bottom: 15px; }
         
-        .sub-btn { 
-            width: 70px; height: 70px; border-radius: 50%; background: #222; 
-            color: var(--veridian-gold); display: flex; align-items: center; justify-content: center; 
-            font-size: 0.65rem; font-weight: bold; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
-            border: 1px solid var(--veridian-gold); cursor: pointer; transition: 0.3s;
+        /* Badge */
+        .type-badge {
+            font-size: 9px; letter-spacing: 2px; color: #666; 
+            border: 1px solid #333; padding: 4px 8px; border-radius: 2px;
+            text-transform: uppercase;
         }
-        .sub-btn:hover { background: var(--veridian-gold); color: #000; transform: scale(1.1); }
+
+        /* --- THE BLOOM MENU (Refined) --- */
+        .hub-container {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
+            z-index: 100; display: flex; flex-direction: column-reverse; align-items: center; gap: 20px;
+        }
+        
+        .hub-main-btn { 
+            width: 60px; height: 60px; background: var(--gold); color: #050505; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid #fff;
+        }
+        .hub-main-btn:hover { transform: scale(1.1); box-shadow: 0 0 50px rgba(212, 175, 55, 0.5); }
+        
+        /* The Fan-Out Menu */
+        .bloom-tray {
+            display: flex; gap: 15px;
+            transition: 0.4s ease-out; opacity: 0; transform: translateY(20px) scale(0.9); pointer-events: none;
+            background: rgba(10,10,10,0.8); padding: 10px 20px; border-radius: 50px;
+            border: 1px solid #333; backdrop-filter: blur(10px);
+        }
+        .bloom-tray.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        
+        .bloom-item {
+            font-family: 'Fira Code', monospace; font-size: 10px; color: #888;
+            cursor: pointer; letter-spacing: 1px; padding: 8px 12px;
+            transition: 0.3s; border-bottom: 1px solid transparent;
+        }
+        .bloom-item:hover { color: var(--gold); border-bottom: 1px solid var(--gold); }
+
+        /* --- THE RITUAL SCREEN (New Quote) --- */
+        #ritual-screen {
+            background: #000; z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 1.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
 
-    <div id="boot-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505]" onclick="bootSystem()">
-        <p class="text-xl md:text-2xl font-mono text-green-500 mb-6">Initializing Veridian Forge...</p>
-        <div class="w-48 h-1 bg-gray-800 rounded overflow-hidden">
-            <div class="h-full bg-[#D4AF37] animate-[width_2s_ease-out_forwards]" style="width: 100%"></div>
+    <div id="ritual-screen" class="fixed inset-0 cursor-pointer" onclick="enterForge()">
+        <div class="text-center">
+            <h2 class="lux-serif text-2xl md:text-3xl text-[#E0E0E0] mb-4 tracking-[0.3em]">THE ARCHITECT</h2>
+            <p class="text-[#D4AF37] italic font-serif text-sm opacity-60 tracking-widest">"Order from Chaos."</p>
         </div>
-        <span class="mt-4 text-[10px] text-gray-500 font-mono animate-pulse">TAP TO ACCESS CONSOLE</span>
     </div>
 
-    <div id="main-interface" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
-        <header class="text-center pt-20 pb-4">
-            <h1 class="lux-serif text-3xl md:text-5xl text-[#D4AF37] mb-4">CODE HUB</h1>
-            <input type="text" id="forge-search" oninput="scanForge()" placeholder="> Query Function..." class="bg-transparent border-b border-[#333] py-2 w-80 text-center focus:outline-none text-green-500 font-mono text-lg placeholder-gray-700">
+    <div id="vault-interface" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col justify-center">
+        
+        <header class="header-stack pt-10">
+            <span class="title-veridian lux-serif">VERIDIAN</span>
+            <span class="title-hub lux-serif">CODE HUB</span>
+            
+            <div class="mt-8 relative group">
+                <input type="text" id="vault-search" oninput="searchVault()" 
+                       placeholder="SEARCH THE ARCHIVE" 
+                       class="bg-transparent border-b border-[#333] py-2 w-64 text-center focus:outline-none text-[#D4AF37] tech-mono text-xs placeholder-[#444] tracking-widest transition-all group-hover:w-80 group-hover:border-[#555]">
+            </div>
         </header>
 
-        <div id="rack" class="rack-horizontal flex-1">
+        <div id="shelf" class="shelf-container">
             </div>
 
         <div class="hub-container">
-            <div id="bloom" class="menu-bloom">
-                <button class="sub-btn" onclick="window.location.href='upload_code.html'">UPLOAD</button>
-                <button class="sub-btn" onclick="window.location.href='business.html'">BIZ</button>
-                <button class="sub-btn" onclick="window.location.href='index.html'">LIBRARY</button>
-                <button class="sub-btn" onclick="goToOrigin(event)">ORIGIN</button>
+            <div class="hub-main-btn" onclick="toggleBloom()">
+                <span id="menu-icon" class="tech-mono font-bold text-xl">+</span>
             </div>
-            <div class="hub-btn" onclick="toggleMenu()">
-                <span id="plus" style="transition: 0.5s;">+</span>
+            
+            <div id="bloom-tray" class="bloom-tray">
+                <span class="bloom-item" onclick="goToOrigin(event)">ORIGIN</span>
+                <span class="bloom-item" onclick="window.location.href='socials.html'">SOCIALS</span>
+                <span class="bloom-item" onclick="window.location.href='dashboard.html'">MODE</span>
+                <span class="bloom-item" onclick="window.location.href='upload.html'">UPLOAD</span>
             </div>
         </div>
+
     </div>
 
     <script>
-        // Example "Static" Codes to show before you upload anything
-        const staticCodes = [
-            { id: "001", title: "Nav_Core_v1", lang: "CSS", func: "UI Structure" },
-            { id: "002", title: "Auth_Gate", lang: "JS", func: "Security" },
-            { id: "003", title: "Data_Fetch", lang: "Python", func: "API Link" }
+        // System Default Files (The "Examples")
+        const systemModules = [
+            { id: "sys_1", title: "Protocol_0.js", author: "System", type: "JS" },
+            { id: "sys_2", title: "Visual_Core.css", author: "Design", type: "CSS" },
+            { id: "sys_3", title: "Manifesto.txt", author: "Root", type: "TXT" }
         ];
 
-        function bootSystem() {
-            document.getElementById('boot-screen').style.opacity = '0';
+        // --- RITUAL LOGIC ---
+        function enterForge() {
+            const screen = document.getElementById('ritual-screen');
+            if(screen.style.opacity === '0') return; // Already fading
+
+            screen.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('boot-screen').classList.add('hidden');
-                const ui = document.getElementById('main-interface');
-                ui.classList.remove('hidden');
-                setTimeout(() => ui.classList.add('opacity-100'), 50);
-                scanForge(); 
-            }, 800);
+                screen.classList.add('hidden');
+                const vault = document.getElementById('vault-interface');
+                vault.classList.remove('hidden');
+                requestAnimationFrame(() => vault.classList.add('opacity-100'));
+                searchVault(); 
+            }, 1500);
         }
 
-        function toggleMenu() {
-            const bloom = document.getElementById('bloom');
-            const plus = document.getElementById('plus');
-            bloom.classList.toggle('active');
-            plus.innerHTML = bloom.classList.contains('active') ? "×" : "+";
+        // Auto-Trigger for smooth entry
+        window.onload = () => { setTimeout(enterForge, 2500); };
+
+        // --- MENU LOGIC ---
+        function toggleBloom() {
+            const tray = document.getElementById('bloom-tray');
+            const icon = document.getElementById('menu-icon');
+            tray.classList.toggle('active');
+            icon.innerText = tray.classList.contains('active') ? "×" : "+";
         }
 
         function goToOrigin(event) {
             event.stopPropagation();
-            window.location.href = 'origin.html';
+            window.location.href = 'origin.html'; 
         }
 
-        async function scanForge() {
-            const rack = document.getElementById('rack');
-            const query = document.getElementById('forge-search').value.toLowerCase();
-            rack.innerHTML = ''; 
+        // --- DATABASE LOGIC ---
+        async function searchVault() {
+            const shelf = document.getElementById('shelf');
+            const query = document.getElementById('vault-search').value.toLowerCase();
+            shelf.innerHTML = ''; 
 
             try {
-                // CHANGED: Key is now 'veridian_code_forge' so it doesn't mix with stories
-                const forgeData = await localforage.getItem('veridian_code_forge') || [];
-                const allModules = [...staticCodes, ...forgeData];
+                // Connecting to the CORRECT Database
+                const forgeData = await localforage.getItem('veridian_forge_data') || [];
+                const allFiles = [...systemModules, ...forgeData];
                 
-                const filtered = allModules.filter(item => 
-                    item.title.toLowerCase().includes(query) || 
-                    item.func.toLowerCase().includes(query)
+                const filtered = allFiles.filter(file => 
+                    file.title.toLowerCase().includes(query)
                 );
 
-                filtered.forEach(item => {
-                    const moduleDiv = document.createElement('div');
-                    moduleDiv.className = 'code-module';
-                    // Passes ID to the reader
-                    moduleDiv.onclick = () => window.location.href = `reader.html?id=${item.id}`;
+                if(filtered.length === 0) {
+                     shelf.innerHTML = `<div class="w-full text-center text-[#333] tech-mono text-xs tracking-widest">VAULT EMPTY</div>`;
+                     return;
+                }
+
+                filtered.forEach(file => {
+                    const card = document.createElement('div');
+                    card.className = 'data-slate';
+                    card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
                     
-                    // The "Card" Look
-                    moduleDiv.innerHTML = `
+                    // Logic to show clean extension
+                    let ext = file.type || "DOC";
+                    if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
+                    if(ext.length > 4) ext = "FILE";
+
+                    card.innerHTML = `
                         <div>
-                            <span class="text-xs text-gray-500 font-mono block mb-2">// ${item.id}</span>
-                            <h3 class="text-xl text-[#D4AF37] font-bold truncate">${item.title}</h3>
-                            <span class="text-xs text-green-500 font-mono bg-[#050505] px-2 py-1 rounded border border-[#333] mt-2 inline-block">
-                                .${item.lang || 'txt'}
-                            </span>
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="type-badge tech-mono">${ext}</span>
+                                <div class="w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_10px_#D4AF37]"></div>
+                            </div>
+                            <div class="slate-line"></div>
+                            <h3 class="lux-serif text-[#E0E0E0] text-xl tracking-wider leading-snug break-words">
+                                ${file.title}
+                            </h3>
                         </div>
-                        <div class="text-sm text-gray-400 font-mono border-t border-[#333] pt-4">
-                            fn: ${item.func || 'Execute'}
+                        
+                        <div class="flex justify-between items-end border-t border-[#222] pt-4">
+                            <div class="text-[#555] text-[10px] tech-mono">
+                                ID: ${file.id.toString().substring(0,4)}<br>
+                                AUTH: ${file.author || 'ME'}
+                            </div>
+                            <div class="text-[#D4AF37] text-lg opacity-50">➔</div>
                         </div>
                     `;
-                    rack.appendChild(moduleDiv);
+                    shelf.appendChild(card);
                 });
             } catch (err) {
-                console.error("System Failure:", err);
+                console.error("Vault Error:", err);
             }
         }
     </script>
