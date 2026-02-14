@@ -3,155 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Forge | Ingestion</title>
+    <title>Veridian Forge | Ingestion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
     <style>
-        :root { --carbon: #0F0A05; --gold: #D4AF37; --slate: #1E1E1E; }
+        :root { 
+            --onyx: #050505; 
+            --gold: #D4AF37; 
+            --carbon: #141414; 
+            --glass: rgba(20, 20, 20, 0.8);
+        }
         
         body { 
             font-family: 'Fira Code', monospace; 
-            background-color: var(--carbon); 
+            background-color: var(--onyx); 
             color: #e0e0e0;
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; margin: 0; 
+            overflow-x: hidden;
         }
 
-        /* --- THE GRID BACKGROUND --- */
-        .tech-grid {
-            position: fixed; inset: 0; pointer-events: none;
-            background-image: linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
+        /* --- BACKGROUND --- */
+        .forge-bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #000000 80%);
+        }
+        .forge-bg::after {
+            content: ""; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(212, 175, 55, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px; opacity: 0.3;
         }
 
-        .terminal-form {
-            background: rgba(20, 20, 20, 0.95);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 40px; width: 100%; max-width: 650px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            border-radius: 6px; margin-top: 50px; position: relative;
-            z-index: 10;
+        /* --- THE TERMINAL CARD --- */
+        .terminal-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-top: 2px solid var(--gold);
+            width: 90%; max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+            position: relative;
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* Input Styling */
-        input, select, textarea {
-            background: #0a0a0a; border: 1px solid #333;
-            width: 100%; color: var(--gold); padding: 12px; margin-bottom: 20px;
-            outline: none; transition: 0.3s; font-family: 'Fira Code', monospace; font-size: 12px;
-            border-radius: 4px;
-        }
-        input:focus, textarea:focus, select:focus { 
-            border-color: var(--gold); box-shadow: 0 0 10px rgba(212, 175, 55, 0.1); 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* The Header */
-        h1 { 
-            font-family: 'Cinzel', serif; letter-spacing: 0.2em; color: var(--gold); 
-            text-align: center; margin-bottom: 30px; cursor: pointer; user-select: none;
+        /* --- INPUT STYLING (Luxury Tech) --- */
+        .input-group { position: relative; margin-bottom: 25px; }
+        
+        .tech-input {
+            width: 100%; background: rgba(0,0,0,0.3);
+            border: none; border-bottom: 1px solid #333;
+            color: var(--gold); padding: 10px 0;
+            font-family: 'Fira Code', monospace; font-size: 14px;
+            transition: 0.3s;
+        }
+        .tech-input:focus { 
+            outline: none; border-bottom-color: var(--gold); 
+            background: linear-gradient(to right, rgba(212, 175, 55, 0.05), transparent);
+        }
+        
+        .input-label {
+            font-size: 9px; color: #666; letter-spacing: 2px; text-transform: uppercase;
+            position: absolute; top: -10px; left: 0;
         }
 
-        /* Buttons */
-        .action-btn {
-            width: 100%; padding: 15px; background: var(--gold); color: #000;
-            border: none; font-weight: bold; cursor: pointer;
-            font-family: 'Fira Code', monospace; letter-spacing: 1px;
-            transition: 0.3s; margin-top: 10px;
+        /* Text Area */
+        textarea.tech-input {
+            border: 1px solid #333; padding: 15px; margin-top: 10px;
+            min-height: 200px; resize: vertical;
         }
-        .action-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+        textarea.tech-input:focus { border-color: var(--gold); }
 
-        .tab-btn {
-            flex: 1; padding: 10px; border: 1px solid #333; color: #555;
-            background: transparent; cursor: pointer; font-size: 10px; transition: 0.3s;
+        /* --- BUTTONS --- */
+        .forge-btn {
+            width: 100%; padding: 18px; 
+            background: var(--gold); color: #000;
+            border: 1px solid var(--gold);
+            font-family: 'Fira Code', monospace; font-weight: 700; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; margin-top: 20px;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
         }
-        .tab-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .forge-btn:hover { 
+            background: transparent; color: var(--gold); 
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        }
 
-        /* PDF Zone */
-        .drop-zone {
-            border: 2px dashed rgba(212, 175, 55, 0.3); padding: 30px;
-            text-align: center; color: #666; font-size: 10px; cursor: pointer;
-            transition: 0.3s; margin-bottom: 20px;
+        .upload-options { display: flex; gap: 20px; margin-bottom: 20px; }
+        .opt-btn {
+            flex: 1; padding: 12px; background: #111; border: 1px solid #333;
+            color: #666; font-size: 10px; cursor: pointer; transition: 0.3s;
         }
-        .drop-zone:hover { border-color: var(--gold); color: var(--gold); }
+        .opt-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+
+        /* --- HEADER --- */
+        .header-lux {
+            text-align: center; margin-bottom: 40px;
+            border-bottom: 1px solid #222; padding-bottom: 20px;
+        }
+        .header-lux h1 {
+            font-family: 'Cinzel', serif; color: #E0E0E0; letter-spacing: 0.2em; font-size: 24px;
+        }
+        .header-lux p {
+            font-size: 10px; color: var(--gold); letter-spacing: 3px; opacity: 0.7; margin-top: 5px;
+        }
+
+        /* Back Button */
+        .back-link {
+            position: absolute; top: 30px; left: 30px;
+            color: #444; font-size: 10px; letter-spacing: 2px;
+            text-decoration: none; transition: 0.3s; cursor: pointer;
+        }
+        .back-link:hover { color: var(--gold); }
 
     </style>
 </head>
 <body>
-    <div class="tech-grid"></div>
+    <div class="forge-bg"></div>
 
-    <button onclick="window.location.href='index.html'" 
-            class="fixed top-6 left-6 text-[#D4AF37] opacity-50 hover:opacity-100 uppercase text-[10px] tracking-widest z-[100] transition-all">
-            ← ABORT SEQUENCE
-    </button>
+    <div class="back-link" onclick="window.location.href='index.html'">← TERMINATE</div>
 
-    <div class="terminal-form">
-        <h1 id="terminal-title">DATA INGESTION</h1>
-
-        <div class="flex gap-4 mb-6">
-            <input type="text" id="fileTitle" placeholder="FILENAME (e.g., protocol_v1.js)" class="flex-[2]">
-            <select id="fileExt" class="flex-1">
-                <option value="TXT">TXT</option>
-                <option value="JS">JS</option>
-                <option value="PY">PY</option>
-                <option value="HTML">HTML</option>
-                <option value="CSS">CSS</option>
-                <option value="DOC">DOC</option>
-            </select>
+    <div class="terminal-panel">
+        
+        <div class="header-lux" onclick="triggerAdmin()">
+            <h1>DATA INGESTION</h1>
+            <p>PROTOCOL V.3.0 // SECURE UPLOAD</p>
         </div>
 
-        <div class="flex mb-6">
-            <button class="tab-btn active" id="btn-manual" onclick="setMode('manual')">MANUAL INPUT</button>
-            <button class="tab-btn" id="btn-pdf" onclick="setMode('pdf')">PDF PARSE</button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+            <div class="input-group">
+                <span class="input-label">Artifact Title</span>
+                <input type="text" id="fileTitle" class="tech-input" placeholder="e.g. Navigation_Core_v2">
+            </div>
+            
+            <div class="input-group">
+                <span class="input-label">Architect (Author)</span>
+                <input type="text" id="fileAuthor" class="tech-input" placeholder="e.g. System_Admin">
+            </div>
         </div>
 
-        <div id="pdf-section" class="hidden">
-            <div class="drop-zone" onclick="document.getElementById('pdf-input').click()">
-                <p>CLICK TO UPLOAD PDF DOCUMENT</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+            <div class="input-group">
+                <span class="input-label">File Type</span>
+                <select id="fileExt" class="tech-input bg-transparent">
+                    <option value="JS">JAVASCRIPT (.js)</option>
+                    <option value="HTML">HTML5 (.html)</option>
+                    <option value="CSS">CSS3 (.css)</option>
+                    <option value="PY">PYTHON (.py)</option>
+                    <option value="TXT">TEXT (.txt)</option>
+                    <option value="DOC">DOCUMENT (.doc)</option>
+                </select>
+            </div>
+            
+            <div class="input-group md:col-span-2">
+                <span class="input-label">Function / Description</span>
+                <input type="text" id="fileFunc" class="tech-input" placeholder="e.g. Handles user authentication logic...">
+            </div>
+        </div>
+
+        <div class="upload-options">
+            <button class="opt-btn active" id="btn-manual" onclick="setMode('manual')">MANUAL ENTRY</button>
+            <button class="opt-btn" id="btn-pdf" onclick="setMode('pdf')">PDF PARSE (BETA)</button>
+        </div>
+
+        <div id="pdf-section" class="hidden mb-6">
+            <div class="border border-dashed border-[#333] hover:border-[#D4AF37] p-8 text-center cursor-pointer transition-colors" onclick="document.getElementById('pdf-input').click()">
+                <p class="text-[10px] text-[#666] tracking-widest">CLICK TO SCAN PDF DOCUMENT</p>
                 <input type="file" id="pdf-input" hidden accept=".pdf" onchange="handlePdfUpload(event)">
             </div>
-            <p id="pdf-status" class="text-center text-[10px] text-[#D4AF37] mb-4 h-4"></p>
+            <p id="pdf-status" class="text-center text-[10px] text-[#D4AF37] mt-2"></p>
         </div>
 
-        <textarea id="fileContent" rows="12" placeholder="// PASTE OR TYPE CODE HERE..."></textarea>
-        
-        <button class="action-btn" onclick="commitToForge()">INITIATE UPLOAD</button>
+        <div class="input-group">
+            <span class="input-label">Source Code / Content</span>
+            <textarea id="fileContent" class="tech-input" placeholder="// Paste raw data here..."></textarea>
+        </div>
+
+        <button class="forge-btn" onclick="saveArtifact()">
+            INITIALIZE UPLOAD
+        </button>
+
     </div>
 
-    <script src="upload-enhancements.js"></script>
-
     <script>
-        // PDF Worker Setup (Required for PDF.js)
+        // PDF Worker (Essential for PDF Reading)
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-        // --- UI TOGGLE LOGIC ---
+        // --- 1. TOGGLE MODES ---
         function setMode(mode) {
             document.getElementById('btn-manual').classList.toggle('active', mode === 'manual');
             document.getElementById('btn-pdf').classList.toggle('active', mode === 'pdf');
             
+            const pdfSec = document.getElementById('pdf-section');
+            const textArea = document.getElementById('fileContent');
+
             if (mode === 'pdf') {
-                document.getElementById('pdf-section').classList.remove('hidden');
-                document.getElementById('fileContent').placeholder = "// EXTRACTED TEXT WILL APPEAR HERE...";
+                pdfSec.classList.remove('hidden');
+                textArea.placeholder = "// [WAITING FOR PDF STREAM...]";
             } else {
-                document.getElementById('pdf-section').classList.add('hidden');
-                document.getElementById('fileContent').placeholder = "// PASTE OR TYPE CODE HERE...";
+                pdfSec.classList.add('hidden');
+                textArea.placeholder = "// Paste raw data here...";
             }
         }
 
-        // --- SECRET ADMIN GATE ---
-        let taps = 0;
-        document.getElementById('terminal-title').addEventListener('click', () => {
-            taps++;
-            setTimeout(() => taps = 0, 800); 
-            if(taps === 3) {
-                const pass = prompt("ROOT ACCESS REQUIRED:");
-                if(pass === "sudo_forge") { // NEW PASSWORD
-                    window.location.href = 'admin.html';
-                }
+        // --- 2. THE SAVE RITUAL (Updated for New Fields) ---
+        async function saveArtifact() {
+            const title = document.getElementById('fileTitle').value.trim();
+            const author = document.getElementById('fileAuthor').value.trim() || "Unknown";
+            const type = document.getElementById('fileExt').value;
+            const func = document.getElementById('fileFunc').value.trim() || "No description provided.";
+            const content = document.getElementById('fileContent').value;
+
+            // Validation
+            if (!title || !content) {
+                alert(">> ERROR: DATA CORRUPTED. TITLE AND CONTENT REQUIRED.");
+                return;
             }
-        });
+
+            // Create the Artifact Object
+            const artifact = {
+                id: Date.now().toString(), // Unique ID based on time
+                title: title.includes('.') ? title : `${title}.${type.toLowerCase()}`, // Auto-add extension
+                author: author,
+                type: type,
+                func: func, // Function description
+                timestamp: new Date().toLocaleString(), // Readable Time
+                content: content
+            };
+
+            try {
+                // Fetch existing database
+                let forgeData = await localforage.getItem('veridian_forge_data') || [];
+                
+                // Add new artifact
+                forgeData.push(artifact);
+                
+                // Save back to storage
+                await localforage.setItem('veridian_forge_data', forgeData);
+                
+                alert(">> UPLOAD SUCCESSFUL. ARTIFACT SECURED.");
+                window.location.href = 'index.html'; // Return to hub
+            } catch (e) {
+                console.error("Save Failed:", e);
+                alert(">> CRITICAL ERROR: STORAGE FAILURE.");
+            }
+        }
+
+        // --- 3. PDF PARSING LOGIC ---
+        async function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('pdf-status').innerText = ">> SCANNING SECTORS...";
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                let fullText = "";
+
+                // Loop through all pages
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += `// --- PAGE ${i} ---\n${pageText}\n\n`;
+                }
+
+                document.getElementById('fileContent').value = fullText;
+                document.getElementById('pdf-status').innerText = ">> EXTRACTION COMPLETE.";
+                
+                // Auto-fill title if empty
+                if(!document.getElementById('fileTitle').value) {
+                    document.getElementById('fileTitle').value = file.name;
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('pdf-status').innerText = ">> ERROR: PDF ENCRYPTED OR CORRUPT.";
+            }
+        }
+
+        // --- 4. ADMIN EASTER EGG ---
+        let clicks = 0;
+        function triggerAdmin() {
+            clicks++;
+            if(clicks === 5) {
+                const pin = prompt(">> AUTHENTICATE:");
+                if(pin === "0000") window.location.href = 'admin.html';
+                clicks = 0;
+            }
+        }
     </script>
 </body>
 </html>
