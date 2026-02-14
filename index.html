@@ -6,13 +6,14 @@
     <title>Veridian Forge | Code Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Fira+Code:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { 
             --void: #050505; 
             --gold: #D4AF37; 
             --carbon: #141414; 
             --platinum: #E0E0E0;
+            --glass: rgba(30, 30, 30, 0.4);
         }
         body { 
             font-family: 'Fauna One', serif; 
@@ -24,14 +25,14 @@
         .lux-serif { font-family: 'Cinzel', serif; letter-spacing: 0.2em; }
         .tech-mono { font-family: 'Fira Code', monospace; }
 
-        /* --- INDUSTRIAL LUXURY THEME --- */
+        /* --- THEME --- */
         .forge-theme { 
             background: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #000000 80%);
             min-height: 100vh;
             position: relative;
         }
 
-        /* --- THE SPLIT HEADER --- */
+        /* --- HEADER --- */
         .header-stack {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             margin-bottom: 10px;
@@ -45,65 +46,81 @@
             font-weight: 700; opacity: 0.9; margin-top: -5px;
         }
 
-        /* --- THE SHELF (Horizontal Scroll) --- */
+        /* --- SHELF --- */
         .shelf-horizontal {
             display: flex;
             gap: 40px;
             overflow-x: auto;
-            padding: 40px 80px 100px 80px; /* Padding allows space for hover effects */
+            padding: 40px 80px 100px 80px; 
             scroll-snap-type: x mandatory;
             scrollbar-width: none;
             align-items: center;
-            height: 60vh;
+            height: 62vh; /* Increased height for taller cards */
         }
         .shelf-horizontal::-webkit-scrollbar { display: none; }
 
-        /* --- THE DATA SLATE (Replaces Book Artifact) --- */
+        /* --- DETAILED DATA SLATE --- */
         .code-slate {
             scroll-snap-align: center;
-            min-width: 260px;
-            height: 340px;
-            background: linear-gradient(160deg, #1a1a1a, #0a0a0a);
+            min-width: 280px; /* Slightly wider for text */
+            height: 380px;    /* Taller for description */
+            background: linear-gradient(160deg, #141414, #080808);
             border: 1px solid #333;
-            border-top: 4px solid var(--gold); /* Gold Top Indicator */
-            border-radius: 4px;
+            border-top: 3px solid var(--gold);
+            border-radius: 6px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             cursor: pointer;
-            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 30px;
+            padding: 25px;
             position: relative;
+            overflow: hidden;
         }
         
         .code-slate:hover {
             transform: translateY(-15px) scale(1.02);
-            background: #202020;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.15); /* Golden Glow */
+            background: #1a1a1a;
+            border-color: #444;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.1);
         }
 
-        /* Extension Badge (JS, PY, ETC) */
+        /* Badge Styles */
         .slate-badge {
-            align-self: flex-start;
             font-family: 'Fira Code', monospace;
-            font-size: 10px; color: #666;
-            border: 1px solid #333; padding: 4px 8px; 
-            border-radius: 4px; margin-bottom: 20px;
+            font-size: 10px; color: #000; background: var(--gold);
+            padding: 2px 8px; border-radius: 2px; font-weight: bold;
+        }
+        
+        .slate-time {
+            font-family: 'Fira Code', monospace;
+            font-size: 9px; color: #555; letter-spacing: 1px;
         }
 
-        /* --- HUB MENU (Bottom Left) --- */
+        /* Description Truncation */
+        .slate-desc {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px; color: #888;
+            line-height: 1.6;
+            margin-top: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 4; /* Show max 4 lines */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            border-left: 2px solid #333;
+            padding-left: 10px;
+        }
+
+        /* --- HUB MENU --- */
         .hub-container {
-            position: fixed; bottom: 40px; left: 40px; z-index: 100;
+            position: fixed; bottom: 30px; left: 40px; z-index: 100;
             display: flex; flex-direction: column; align-items: center; gap: 20px;
         }
         .hub-btn { 
             width: 70px; height: 70px; background: var(--gold); color: #050505; 
-            border-radius: 12px; /* Slightly squared for industrial feel */
-            display: flex; align-items: center; justify-content: center; 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
             font-size: 2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: pointer;
-            transition: transform 0.4s;
-            border: 1px solid #fff;
+            transition: transform 0.4s; border: 1px solid #fff;
         }
         
         .menu-bloom { 
@@ -130,20 +147,20 @@
 <body>
 
     <div id="quote-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center text-center px-10 bg-[#050505] cursor-pointer" onclick="enterForge()">
-        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light tracking-wider">"The world is built on symbols.<br>We are the architects."</p>
-        <span class="tech-mono text-[10px] text-[#D4AF37] opacity-60 animate-pulse tracking-[0.4em]">INITIALIZING FORGE...</span>
+        <p class="text-xl md:text-2xl italic mb-8 text-[#E2DFD2] font-light tracking-wider">"The code is the law.<br>We are the enforcers."</p>
+        <span class="tech-mono text-[10px] text-[#D4AF37] opacity-60 animate-pulse tracking-[0.4em]">SYSTEM ONLINE // TOUCH TO ACCESS</span>
     </div>
 
     <div id="main-gallery" class="hidden opacity-0 transition-opacity duration-1000 forge-theme h-screen flex flex-col">
         
-        <header class="text-center pt-16 pb-4">
+        <header class="text-center pt-12 pb-2">
             <div class="header-stack mb-6">
                 <span class="title-veridian lux-serif">VERIDIAN</span>
                 <span class="title-hub tech-mono">CODE HUB</span>
             </div>
 
             <input type="text" id="archive-search" oninput="scanForge()" 
-                   placeholder="SEARCH PROTOCOLS..." 
+                   placeholder="SEARCH DATABASE..." 
                    class="bg-transparent border-b border-[#D4AF37]/30 py-2 w-80 text-center focus:outline-none text-[#D4AF37] tech-mono text-sm placeholder-[#444] tracking-widest">
         </header>
 
@@ -164,24 +181,44 @@
     </div>
 
     <script>
-        // System Default Files (Examples so the shelf isn't empty)
+        // Updated System Examples to include Description & Time
         const systemModules = [
-            { id: "sys_1", title: "Kernel_Init.js", author: "System", type: "JS" },
-            { id: "sys_2", title: "Style_Matrix.css", author: "Frontend", type: "CSS" },
-            { id: "sys_3", title: "Manifesto.txt", author: "Admin", type: "TXT" }
+            { 
+                id: "sys_1", 
+                title: "Kernel_Init.js", 
+                author: "System_Root", 
+                type: "JS", 
+                func: "Initializes the core navigation loop and handles local storage events.",
+                timestamp: "12/05/2025, 08:00 AM"
+            },
+            { 
+                id: "sys_2", 
+                title: "Matrix_UI.css", 
+                author: "Frontend_Dev", 
+                type: "CSS", 
+                func: "Defines the global style variables, grid layouts, and carbon-fiber textures.",
+                timestamp: "10/01/2026, 04:20 PM"
+            },
+            { 
+                id: "sys_3", 
+                title: "Protocol_Omicron", 
+                author: "Security", 
+                type: "PY", 
+                func: "Advanced encryption algorithm for securing user artifacts in the vault.",
+                timestamp: "01/01/2026, 00:01 AM"
+            }
         ];
 
-        // --- ENTRY LOGIC (Fixed Frozen Issue) ---
+        // --- ENTRY LOGIC ---
         function enterForge() {
             const screen = document.getElementById('quote-screen');
-            if(screen.style.opacity === '0') return; // Prevent double click
+            if(screen.style.opacity === '0') return;
 
             screen.style.opacity = '0';
             setTimeout(() => {
                 screen.classList.add('hidden');
                 const gallery = document.getElementById('main-gallery');
                 gallery.classList.remove('hidden');
-                // Force a repaint before adding opacity for smooth fade
                 requestAnimationFrame(() => {
                     gallery.classList.add('opacity-100');
                     scanForge(); 
@@ -202,14 +239,13 @@
             window.location.href = 'origin.html'; 
         }
 
-        // --- DATABASE LOGIC (Targets 'veridian_forge_data') ---
+        // --- DATABASE LOGIC (The New Slate Render) ---
         async function scanForge() {
             const shelf = document.getElementById('shelf');
             const query = document.getElementById('archive-search').value.toLowerCase();
             shelf.innerHTML = ''; 
 
             try {
-                // FIXED: Now looking at the correct CODE database
                 const forgeData = await localforage.getItem('veridian_forge_data') || [];
                 const allFiles = [...systemModules, ...forgeData];
                 
@@ -228,37 +264,16 @@
                     card.className = 'code-slate';
                     card.onclick = () => window.location.href = `reader.html?id=${file.id}`;
                     
-                    // Auto-Badge Logic
+                    // Logic for Extension
                     let ext = file.type || "DOC";
                     if(file.title.includes('.')) ext = file.title.split('.').pop().toUpperCase();
                     if(ext.length > 4) ext = "FILE";
 
+                    // Logic for Timestamp (Fallback)
+                    let time = file.timestamp || "PRE-SYSTEM";
+                    
+                    // Logic for Function (Fallback)
+                    let description = file.func || "No functional description available for this artifact.";
+
                     card.innerHTML = `
-                        <div>
-                            <span class="slate-badge">${ext}</span>
-                            <h3 class="lux-serif text-[#E0E0E0] text-lg mt-6 tracking-wide leading-tight break-words">
-                                ${file.title}
-                            </h3>
-                            <p class="text-[#666] text-[10px] mt-2 tech-mono italic">Dev: ${file.author || 'Me'}</p>
-                        </div>
-                        
-                        <div class="w-full border-t border-[#333] pt-4 flex justify-between items-center">
-                             <span class="text-[9px] text-[#444] tech-mono uppercase">ID: ${file.id.toString().substring(0,6)}</span>
-                             <span class="text-[#D4AF37] text-xs">➔</span>
-                        </div>
-                    `;
-                    shelf.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Forge Error:", err);
-            }
-        }
         
-        // Auto-Run safety in case click fails (Solves Frozen Screen)
-        window.onload = () => {
-             // Optional: Uncomment next line if you want auto-entry without click
-             // setTimeout(enterForge, 3000); 
-        };
-    </script>
-</body>
-</html>
